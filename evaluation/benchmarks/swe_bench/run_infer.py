@@ -168,7 +168,7 @@ def get_config(
     sandbox_config = get_default_sandbox_config_for_eval()
     sandbox_config.base_container_image = base_container_image
     sandbox_config.enable_auto_lint = True
-    sandbox_config.use_host_network = True
+    sandbox_config.use_host_network = False
     # Add platform to the sandbox config to solve issue 4401
     sandbox_config.platform = 'linux/amd64'
     sandbox_config.remote_runtime_resource_factor = get_instance_resource_factor(
