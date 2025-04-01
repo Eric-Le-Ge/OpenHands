@@ -109,11 +109,11 @@ EOF
 
 RUN <<EOF
 #!/bin/bash
-printf "#!/bin/bash
+MODEL=\${MODEL:-'gemini/gemini-1.5-flash-002'}
 SELECTED_IDS=\${SELECTED_IDS:-\"['sphinx-doc__sphinx-8721']\"}
 printf \"selected_ids = \${SELECTED_IDS}\n\" > /app/evaluation/benchmarks/swe_bench/config.toml
 # Create LLM config.
-printf \"[llm.gemini]\n model = 'gemini/gemini-1.5-flash-002'\n api_key = '\${GEMINI_API_KEY}'\n temperature = 0.0\n\" > /app/config.toml
+printf \"[llm.gemini]\n model = '\${MODEL}'\n api_key = '\${GEMINI_API_KEY}'\n temperature = 0.0\n\" > /app/config.toml
 # Run evaluation.
 # See README at https://github.com/All-Hands-AI/OpenHands/tree/main/evaluation/benchmarks/swe_bench
 # [model_config] [git-version] [agent] [eval_limit] [max_iter] [num_workers] [dataset] [dataset_split]
