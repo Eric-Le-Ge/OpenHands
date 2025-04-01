@@ -109,6 +109,7 @@ EOF
 
 RUN <<EOF
 #!/bin/bash
+printf "#!/bin/bash
 MODEL=\${MODEL:-'gemini/gemini-1.5-flash-002'}
 SELECTED_IDS=\${SELECTED_IDS:-\"['sphinx-doc__sphinx-8721']\"}
 printf \"selected_ids = \${SELECTED_IDS}\n\" > /app/evaluation/benchmarks/swe_bench/config.toml
