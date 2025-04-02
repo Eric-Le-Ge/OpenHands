@@ -89,15 +89,17 @@ chmod a+x /version.sh
 EOF
 
 ENV SANDBOX_RUNTIME_CONTAINER_IMAGE=ghcr.io/all-hands-ai/runtime:0.30-nikolaik
+ENV SANDBOX_USER_ID=1234
 ENV SANDBOX_API_HOSTNAME=host.docker.internal
 
-RUN git clone https://github.com/All-Hands-AI/OpenHands.git /app --branch 0.30.0
+RUN git clone https://github.com/Eric-Le-Ge/OpenHands.git /app
 
 ENV HOME=/app
 
 WORKDIR /app
 
-# RUN printf "selected_ids = ['sphinx-doc__sphinx-8721']" > evaluation/benchmarks/swe_bench/config.toml
+# # For outputs.
+# RUN mkdir /app/evaluation/evaluation_outputs && mkdir /app/evaluation/evaluation_outputs/outputs
 
 # cache build dependencies
 RUN <<EOF
@@ -123,4 +125,5 @@ printf \"[llm.gemini]\n model = '\${MODEL}'\n api_key = '\${GEMINI_API_KEY}'\n t
 chmod a+x /app/entrypoint.sh
 EOF
 
-ENTRYPOINT "/app/entrypoint.sh"
+# ENTRYPOINT "/app/entrypoint.sh"
+ENTRYPOINT bash

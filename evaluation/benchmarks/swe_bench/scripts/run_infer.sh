@@ -111,8 +111,9 @@ function run_eval() {
     --eval-note $eval_note \
     --dataset $DATASET \
     --split $SPLIT \
-    --mode $MODE"
-
+    --mode $MODE" \
+    --run_id '${RUN_ID}' \
+    --shard_id '${SHARD_ID}'"
 
 
   if [ -n "$EVAL_LIMIT" ]; then
