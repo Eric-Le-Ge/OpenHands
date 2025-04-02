@@ -752,7 +752,18 @@ if __name__ == '__main__':
         choices=['swe', 'swt', 'swt-ci'],
         help="mode to run the evaluation, either 'swe', 'swt', or 'swt-ci'",
     )
-
+    parser.add_argument(
+        '--run_id',
+        type=str,
+        default='',
+        help='Run ID of the eval',
+    )
+    parser.add_argument(
+        '--shard_id',
+        type=str,
+        default='',
+        help='Shard ID of the eval',
+    )
     args, _ = parser.parse_known_args()
 
     # NOTE: It is preferable to load datasets from huggingface datasets and perform post-processing
@@ -823,6 +834,8 @@ if __name__ == '__main__':
         args.eval_output_dir,
         details=details,
         condenser_config=condenser_config,
+        run_id=args.run_id,
+        shard_id=args.shard_id,
     )
 
     output_file = os.path.join(metadata.eval_output_dir, 'output.jsonl')
