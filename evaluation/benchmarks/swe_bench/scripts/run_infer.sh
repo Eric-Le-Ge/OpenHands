@@ -84,7 +84,10 @@ function run_eval() {
     --eval-num-workers $NUM_WORKERS \
     --eval-note $eval_note \
     --dataset $DATASET \
-    --split $SPLIT"
+    --split $SPLIT \
+    --run_id '${RUN_ID}' \
+    --shard_id '${SHARD_ID}'"
+
 
   if [ -n "$EVAL_LIMIT" ]; then
     echo "EVAL_LIMIT: $EVAL_LIMIT"
