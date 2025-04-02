@@ -88,7 +88,7 @@ netcat -h 2>&1 | head -n 1
 chmod a+x /version.sh
 EOF
 
-ENV SANDBOX_RUNTIME_CONTAINER_IMAGE=ghcr.io/all-hands-ai/runtime:0.30-nikolaik
+ENV SANDBOX_RUNTIME_CONTAINER_IMAGE=ghcr.io/all-hands-ai/runtime:0.31-nikolaik
 ENV SANDBOX_USER_ID=1234
 ENV SANDBOX_API_HOSTNAME=host.docker.internal
 
@@ -125,5 +125,4 @@ printf \"[llm.gemini]\n model = '\${MODEL}'\n api_key = '\${GEMINI_API_KEY}'\n t
 chmod a+x /app/entrypoint.sh
 EOF
 
-# ENTRYPOINT "/app/entrypoint.sh"
-ENTRYPOINT bash
+ENTRYPOINT "/app/entrypoint.sh"
