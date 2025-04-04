@@ -89,17 +89,16 @@ chmod a+x /version.sh
 EOF
 
 ENV SANDBOX_RUNTIME_CONTAINER_IMAGE=ghcr.io/all-hands-ai/runtime:0.31-nikolaik
-ENV SANDBOX_USER_ID=1234
 ENV SANDBOX_API_HOSTNAME=host.docker.internal
 
 RUN git clone https://github.com/Eric-Le-Ge/OpenHands.git /app
 
+# Local dev version of liteLLM.
+RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd /app
+
 ENV HOME=/app
 
 WORKDIR /app
-
-# # For outputs.
-# RUN mkdir /app/evaluation/evaluation_outputs && mkdir /app/evaluation/evaluation_outputs/outputs
 
 # cache build dependencies
 RUN <<EOF
@@ -112,6 +111,8 @@ EOF
 RUN <<EOF
 #!/bin/bash
 printf "#!/bin/bash
+BACKEND_HOST='0.0.0.0'
+SANDBOX_USER_ID=\$(id -u)
 MODEL=\${MODEL:-'gemini/gemini-1.5-flash-002'}
 SELECTED_IDS=\${SELECTED_IDS:-\"['sphinx-doc__sphinx-8721']\"}
 printf \"selected_ids = \${SELECTED_IDS}\n\" > /app/evaluation/benchmarks/swe_bench/config.toml
