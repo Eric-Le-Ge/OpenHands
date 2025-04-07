@@ -69,6 +69,11 @@ RUN curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
 RUN curl -fsSL https://install.python-poetry.org | python3.12 - \
     && ln -s ~/.local/bin/poetry /usr/local/bin/poetry
 
+# Google cloud sdk
+RUN curl -sSL https://sdk.cloud.google.com | bash
+
+ENV PATH $PATH:/root/google-cloud-sdk/bin
+
 #
 RUN <<EOF
 #!/bin/bash
@@ -91,10 +96,10 @@ EOF
 ENV SANDBOX_RUNTIME_CONTAINER_IMAGE=ghcr.io/all-hands-ai/runtime:0.31-nikolaik
 ENV SANDBOX_API_HOSTNAME=host.docker.internal
 
-RUN git clone https://github.com/Eric-Le-Ge/OpenHands.git /app && cd /app && git checkout a477b2575836cdc2fa7d4f6c8ae640a4aa2c21b0
+RUN git clone https://github.com/Eric-Le-Ge/OpenHands.git /app && cd /app && git checkout 0d6bbb1
 
 # Local dev version of liteLLM.
-RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout 28a6fb0 && cd /app
+RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout b95b2ca && cd /app
 
 ENV HOME=/app
 
@@ -111,6 +116,18 @@ EOF
 RUN <<EOF
 #!/bin/bash
 printf "#!/bin/bash
+echo '--- [Cloud Batch Task Start - User Cred Workaround] ---'
+echo '1. Fetching user credentials from Secret Manager...'
+gcloud secrets versions access latest --secret=\"\$USER_ADC_SECRET_NAME\" --project=\"docker-rlef-exploration\" > /tmp/user_adc.json
+chmod 600 /tmp/user_adc.json # Good practice for credential files
+echo '2. Setting GOOGLE_APPLICATION_CREDENTIALS environment variable...'
+export GOOGLE_APPLICATION_CREDENTIALS=/tmp/user_adc.json
+echo '3. Verifying authentication (should show YOUR user account)...'
+gcloud auth list
+# Capture the active account WITHIN the container's shell
+ACTIVE_ACCOUNT=\$(gcloud config get-value account)
+echo \"Active Account for Task: \${ACTIVE_ACCOUNT}\"
+
 BACKEND_HOST='0.0.0.0'
 SANDBOX_USER_ID=\$(id -u)
 MODEL=\${MODEL:-'gemini/gemini-1.5-flash-002'}
