@@ -99,7 +99,7 @@ ENV SANDBOX_API_HOSTNAME=host.docker.internal
 RUN git clone https://github.com/Eric-Le-Ge/OpenHands.git /app && cd /app && git checkout 0d6bbb1
 
 # Local dev version of liteLLM.
-RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout b95b2ca && cd /app
+RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout 6040623 && cd /app
 
 ENV HOME=/app
 
@@ -134,7 +134,7 @@ MODEL=\${MODEL:-'gemini/gemini-1.5-flash-002'}
 SELECTED_IDS=\${SELECTED_IDS:-\"['sphinx-doc__sphinx-8721']\"}
 printf \"selected_ids = \${SELECTED_IDS}\n\" > /app/evaluation/benchmarks/swe_bench/config.toml
 # Create LLM config.
-printf \"[llm.gemini]\n model = '\${MODEL}'\n api_key = '\${GEMINI_API_KEY}'\n temperature = 0.0\n\" > /app/config.toml
+printf \"[llm.gemini]\n model = '\${MODEL}'\n api_key = '\${GEMINI_API_KEY}'\n temperature = 1.0\n top_p = 0.95\n max_output_tokens = 65536\n caching_prompt = false\n num_retries = 25\n timeout = 600\n\" > /app/config.toml
 # Run evaluation.
 # See README at https://github.com/All-Hands-AI/OpenHands/tree/main/evaluation/benchmarks/swe_bench
 # [model_config] [git-version] [agent] [eval_limit] [max_iter] [num_workers] [dataset] [dataset_split]
