@@ -23,6 +23,7 @@ from litellm.exceptions import (
 from litellm.types.utils import Choices, CostPerToken, ModelResponse, Usage
 from litellm.utils import create_pretrained_tokenizer
 from litellm.types.utils import Message
+from litellm.llms.base_llm.chat.transformation import BaseLLMException
 
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.message import Message
@@ -38,7 +39,7 @@ from openhands.llm.retry_mixin import RetryMixin
 __all__ = ['LLM']
 
 # tuple of exceptions to retry on
-LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (RateLimitError,)
+LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (RateLimitError,httpx.HTTPStatusError,BaseLLMException,litellm.InternalServerError)
 
 # cache prompt supporting models
 # remove this when we gemini and deepseek are supported
@@ -291,7 +292,7 @@ class LLM(RetryMixin, DebugMixin):
                     if delta.provider_specific_fields is not None:
                         provider_specific_fields = delta.provider_specific_fields
 
-            logger.info(chunks)
+            logger.info(f'chunks count: {len(chunks)}')
             logger.info(f'joined_content: {joined_content}')
             logger.info(f'role: {role}')
             logger.info(f'tool_call: {tool_calls}')
