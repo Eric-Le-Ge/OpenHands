@@ -99,7 +99,7 @@ ENV SANDBOX_API_HOSTNAME=host.docker.internal
 RUN git clone https://github.com/Eric-Le-Ge/OpenHands.git /app && cd /app && git checkout 0d6bbb1
 
 # Local dev version of liteLLM.
-RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout 6040623 && cd /app
+RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout 83912d6 && cd /app
 
 ENV HOME=/app
 
@@ -127,6 +127,8 @@ gcloud auth list
 # Capture the active account WITHIN the container's shell
 ACTIVE_ACCOUNT=\$(gcloud config get-value account)
 echo \"Active Account for Task: \${ACTIVE_ACCOUNT}\"
+
+export DEBUG=1; export DEBUG_LLM=0; export LOG_ALL_EVENTS=1; export LOG_TO_FILE=1;
 
 BACKEND_HOST='0.0.0.0'
 SANDBOX_USER_ID=\$(id -u)
