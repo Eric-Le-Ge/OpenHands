@@ -324,7 +324,6 @@ class LLM(RetryMixin, DebugMixin):
             provider_specific_fields = None
             for chunk in resp:
                 chunks.append(chunk)
-                logger.info(chunk)
 
                 if not chunk.choices:
                     continue
