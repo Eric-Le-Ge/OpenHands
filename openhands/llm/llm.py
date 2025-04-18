@@ -299,10 +299,11 @@ class LLM(RetryMixin, DebugMixin):
             joined_content = ''
             role = None
             function_call = None
-            tool_calls = []
+            tool_calls: list[ChatCompletionMessageToolCall] = []
             provider_specific_fields = None
             for chunk in resp:
                 chunks.append(chunk)
+                logger.info(chunk)
 
                 if not chunk.choices:
                     continue
@@ -318,7 +319,16 @@ class LLM(RetryMixin, DebugMixin):
                         assert function_call is None
                         function_call = delta.function_call
                     if delta.tool_calls is not None:
-                        tool_calls.extend(delta.tool_calls)
+                        for streaming_tool_call in delta.tool_calls:
+                            # Convert the streaming tool call to a unary one.
+                            tool_calls.append(
+                                ChatCompletionMessageToolCall(
+                                    index=streaming_tool_call.index,
+                                    function=streaming_tool_call.function,
+                                    id=streaming_tool_call.id,
+                                    type=streaming_tool_call.type,
+                                )
+                            )
                     if delta.provider_specific_fields is not None:
                         provider_specific_fields = delta.provider_specific_fields
 
@@ -331,7 +341,7 @@ class LLM(RetryMixin, DebugMixin):
             logger.info(f'chunks count: {len(chunks)}')
             logger.info(f'joined_content: {joined_content}')
             logger.info(f'role: {role}')
-            logger.info(f'tool_call: {tool_calls}')
+            logger.info(f'tool_calls: {tool_calls}')
             logger.info(f'function_calls: {function_call}')
             logger.info(f'provider_specific_fields: {provider_specific_fields}')
 
@@ -544,19 +554,9 @@ class LLM(RetryMixin, DebugMixin):
             ):
                 self.config.max_output_tokens = 64000  # litellm set max to 128k, but that requires a header to be set
 
-        # Initialize function calling capability
-        # Check if model name is in our supported list
-        model_name_supported = (
-            self.config.model in FUNCTION_CALLING_SUPPORTED_MODELS
-            or self.config.model.split('/')[-1] in FUNCTION_CALLING_SUPPORTED_MODELS
-            or any(m in self.config.model for m in FUNCTION_CALLING_SUPPORTED_MODELS)
-        )
-
-        # Handle native_tool_calling user-defined configuration
-        if self.config.native_tool_calling is None:
-            self._function_calling_active = model_name_supported
-        else:
-            self._function_calling_active = self.config.native_tool_calling
+        # Always initialize function calling capability.
+        # We assume the model has function calling capability.
+        self._function_calling_active = True
 
     def vision_is_active(self) -> bool:
         with warnings.catch_warnings():
