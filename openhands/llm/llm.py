@@ -41,7 +41,7 @@ from openhands.llm.retry_mixin import RetryMixin
 __all__ = ['LLM']
 
 # tuple of exceptions to retry on
-LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (RateLimitError,httpx.HTTPStatusError,BaseLLMException,litellm.InternalServerError,LLMNoResponseError,litellm.ServiceUnavailableError)
+LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (RateLimitError,httpx.HTTPStatusError,BaseLLMException,litellm.InternalServerError,LLMNoResponseError,LLMNoResponseError,litellm.ServiceUnavailableError)
 # cache prompt supporting models
 # remove this when we gemini and deepseek are supported
 CACHE_PROMPT_SUPPORTED_MODELS = [
@@ -327,10 +327,10 @@ class LLM(RetryMixin, DebugMixin):
             for chunk in resp:
                 chunks.append(chunk)
 
-                # We assume  that the first choice the selected one by the LLM.
-                logger.debug(f'Response choices: {len(chunk.choices)}')
-                assert len(chunk.choices) >= 1
+                if not chunk.choices:
+                    continue
 
+                # We assume  that the first choice the selected one by the LLM.
                 if chunk.choices[0].delta:
                     delta = chunk.choices[0].delta
                     if delta.content is not None:
@@ -344,6 +344,12 @@ class LLM(RetryMixin, DebugMixin):
                         tool_calls.extend(delta.tool_calls)
                     if delta.provider_specific_fields is not None:
                         provider_specific_fields = delta.provider_specific_fields
+
+            if not chunks or not any(c.choices for c in chunks):
+                raise LLMNoResponseError(
+                    'Response chunks or chunks.choices are empty. Chunks: '
+                    + str(chunks)
+                )
 
             logger.info(f'chunks count: {len(chunks)}')
             logger.info(f'joined_content: {joined_content}')
