@@ -25,6 +25,7 @@ from litellm.utils import create_pretrained_tokenizer
 from litellm.types.utils import Message
 from litellm.llms.base_llm.chat.transformation import BaseLLMException
 
+from openhands.core.exceptions import LLMNoResponseError
 from openhands.core.logger import openhands_logger as logger
 from openhands.core.message import Message
 from openhands.llm.debug_mixin import DebugMixin
@@ -39,7 +40,7 @@ from openhands.llm.retry_mixin import RetryMixin
 __all__ = ['LLM']
 
 # tuple of exceptions to retry on
-LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (RateLimitError,httpx.HTTPStatusError,BaseLLMException,litellm.InternalServerError,LLMNoResponseError,litellm.ServiceUnavailableError)
+LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (RateLimitError,httpx.HTTPStatusError,BaseLLMException,litellm.InternalServerError,LLMNoResponseError,LLMNoResponseError,litellm.ServiceUnavailableError)
 
 # cache prompt supporting models
 # remove this when we gemini and deepseek are supported
@@ -274,10 +275,10 @@ class LLM(RetryMixin, DebugMixin):
             for chunk in resp:
                 chunks.append(chunk)
 
-                # We assume  that the first choice the selected one by the LLM.
-                logger.debug(f'Response choices: {len(chunk.choices)}')
-                assert len(chunk.choices) >= 1
+                if not chunk.choices:
+                    continue
 
+                # We assume  that the first choice the selected one by the LLM.
                 if chunk.choices[0].delta:
                     delta = chunk.choices[0].delta
                     if delta.content is not None:
@@ -291,6 +292,12 @@ class LLM(RetryMixin, DebugMixin):
                         tool_calls.extend(delta.tool_calls)
                     if delta.provider_specific_fields is not None:
                         provider_specific_fields = delta.provider_specific_fields
+
+            if not chunks or not any(c.choices for c in chunks):
+                raise LLMNoResponseError(
+                    'Response chunks or chunks.choices are empty. Chunks: '
+                    + str(chunks)
+                )
 
             logger.info(f'chunks count: {len(chunks)}')
             logger.info(f'joined_content: {joined_content}')
