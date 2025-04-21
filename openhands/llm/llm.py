@@ -513,7 +513,7 @@ class LLM(RetryMixin, DebugMixin):
 
         # Always initialize function calling capability.
         # We assume the model has function calling capability.
-        self._function_calling_active = True
+        self._function_calling_active = False
 
     def vision_is_active(self) -> bool:
         with warnings.catch_warnings():
