@@ -40,7 +40,7 @@ from openhands.llm.retry_mixin import RetryMixin
 __all__ = ['LLM']
 
 # tuple of exceptions to retry on
-LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (RateLimitError,httpx.HTTPStatusError,BaseLLMException,litellm.InternalServerError,LLMNoResponseError,LLMNoResponseError,litellm.ServiceUnavailableError)
+LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (RateLimitError,httpx.HTTPStatusError,BaseLLMException,litellm.InternalServerError,LLMNoResponseError,litellm.ServiceUnavailableError)
 
 # cache prompt supporting models
 # remove this when we gemini and deepseek are supported
@@ -108,7 +108,7 @@ class LLM(RetryMixin, DebugMixin):
         self.metrics: Metrics = (
             metrics if metrics is not None else Metrics(model_name=config.model)
         )
-        self.cost_metric_supported: bool = True
+        self.cost_metric_supported: bool = not config.model.startswith('gemini/dynamic')
         self.config: LLMConfig = copy.deepcopy(config)
 
         self.model_info: ModelInfo | None = None

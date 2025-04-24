@@ -96,8 +96,8 @@ EOF
 ENV SANDBOX_RUNTIME_CONTAINER_IMAGE=ghcr.io/all-hands-ai/runtime:0.31-nikolaik
 ENV SANDBOX_API_HOSTNAME=host.docker.internal
 
-RUN git clone https://github.com/Eric-Le-Ge/OpenHands.git /app && cd /app && git checkout b15ca6e
-
+# RUN git clone https://github.com/Eric-Le-Ge/OpenHands.git /app && cd /app
+RUN git clone --single-branch -b b0423 https://github.com/Eric-Le-Ge/OpenHands.git /app
 
 # Local dev version of liteLLM.
 RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout 83912d6 && cd /app
