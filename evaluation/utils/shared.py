@@ -189,7 +189,6 @@ def make_metadata(
         parents=True, exist_ok=True
     )
     logger.info(f'Using evaluation output directory: {eval_output_path}')
-    logger.LOG_DIR = os.path.join(eval_output_path, 'logs')
 
     metadata = EvalMetadata(
         agent_class=agent_class,
