@@ -264,13 +264,11 @@ class LLM(RetryMixin, DebugMixin):
             # Calculate latency
             latency = time.time() - start_time
 
-            logger.debug(f'LLMLite completion() response: {resp}')
-            
             chunks = []
             joined_content = ''
             role = None
             function_call = None
-            tool_calls = []
+            tool_calls: list[ChatCompletionMessageToolCall] = []
             provider_specific_fields = None
             for chunk in resp:
                 chunks.append(chunk)
@@ -289,7 +287,16 @@ class LLM(RetryMixin, DebugMixin):
                         assert function_call is None
                         function_call = delta.function_call
                     if delta.tool_calls is not None:
-                        tool_calls.extend(delta.tool_calls)
+                        for streaming_tool_call in delta.tool_calls:
+                            # Convert the streaming tool call to a unary one.
+                            tool_calls.append(
+                                ChatCompletionMessageToolCall(
+                                    index=streaming_tool_call.index,
+                                    function=streaming_tool_call.function,
+                                    id=streaming_tool_call.id,
+                                    type=streaming_tool_call.type,
+                                )
+                            )
                     if delta.provider_specific_fields is not None:
                         provider_specific_fields = delta.provider_specific_fields
 
@@ -302,7 +309,7 @@ class LLM(RetryMixin, DebugMixin):
             logger.info(f'chunks count: {len(chunks)}')
             logger.info(f'joined_content: {joined_content}')
             logger.info(f'role: {role}')
-            logger.info(f'tool_call: {tool_calls}')
+            logger.info(f'tool_calls: {tool_calls}')
             logger.info(f'function_calls: {function_call}')
             logger.info(f'provider_specific_fields: {provider_specific_fields}')
 
@@ -504,24 +511,9 @@ class LLM(RetryMixin, DebugMixin):
             if 'claude-3-7-sonnet' in self.config.model:
                 self.config.max_output_tokens = 64000  # litellm set max to 128k, but that requires a header to be set
 
-        # Initialize function calling capability
-        # Check if model name is in our supported list
-        model_name_supported = (
-            self.config.model in FUNCTION_CALLING_SUPPORTED_MODELS
-            or self.config.model.split('/')[-1] in FUNCTION_CALLING_SUPPORTED_MODELS
-            or any(m in self.config.model for m in FUNCTION_CALLING_SUPPORTED_MODELS)
-        )
-
-        # Handle native_tool_calling user-defined configuration
-        if self.config.native_tool_calling is None:
-            self._function_calling_active = model_name_supported
-        elif self.config.native_tool_calling is False:
-            self._function_calling_active = False
-        else:
-            # try to enable native tool calling if supported by the model
-            self._function_calling_active = litellm.supports_function_calling(
-                model=self.config.model
-            )
+        # Always initialize function calling capability.
+        # We assume the model has function calling capability.
+        self._function_calling_active = True
 
     def vision_is_active(self) -> bool:
         with warnings.catch_warnings():
