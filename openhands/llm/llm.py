@@ -108,7 +108,7 @@ class LLM(RetryMixin, DebugMixin):
         self.metrics: Metrics = (
             metrics if metrics is not None else Metrics(model_name=config.model)
         )
-        self.cost_metric_supported: bool = True
+        self.cost_metric_supported: bool = not config.model.startswith('gemini/dynamic')
         self.config: LLMConfig = copy.deepcopy(config)
 
         self.model_info: ModelInfo | None = None

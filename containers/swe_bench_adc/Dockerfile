@@ -96,11 +96,12 @@ EOF
 ENV SANDBOX_RUNTIME_CONTAINER_IMAGE=ghcr.io/all-hands-ai/runtime:0.31-nikolaik
 ENV SANDBOX_API_HOSTNAME=host.docker.internal
 
-RUN git clone https://github.com/Eric-Le-Ge/OpenHands.git /app && cd /app && git checkout 2bd03da
+
+RUN git clone https://github.com/Eric-Le-Ge/OpenHands.git /app
 
 
 # Local dev version of liteLLM.
-RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout 83912d6 && cd /app
+RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout e0cf971 && cd /app
 
 ENV HOME=/app
 
@@ -137,7 +138,7 @@ MODEL=\${MODEL:-'gemini/gemini-1.5-flash-002'}
 SELECTED_IDS=\${SELECTED_IDS:-\"['sphinx-doc__sphinx-8721']\"}
 printf \"selected_ids = \${SELECTED_IDS}\n\" > /app/evaluation/benchmarks/swe_bench/config.toml
 # Create LLM config.
-printf \"[llm.gemini]\n model = '\${MODEL}'\n api_key = '\${GEMINI_API_KEY}'\n temperature = 1.0\n top_p = 0.95\n max_output_tokens = 65536\n caching_prompt = false\n num_retries = 100\n timeout = 600\n\" > /app/config.toml
+printf \"[llm.gemini]\nmodel = '\${MODEL}'\nbase_url = '\${API_BASE_URL}'\napi_key = '\${GEMINI_API_KEY}'\ntemperature = 1.0\ntop_p = 0.95\nmax_output_tokens = 65536\ncaching_prompt = false\nnum_retries = 100\ntimeout = 600\nseed = 42\n\" > /app/config.toml
 # Run evaluation.
 # See README at https://github.com/All-Hands-AI/OpenHands/tree/main/evaluation/benchmarks/swe_bench
 # [model_config] [git-version] [agent] [eval_limit] [max_iter] [num_workers] [dataset] [dataset_split]
