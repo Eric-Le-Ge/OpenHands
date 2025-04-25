@@ -100,7 +100,7 @@ ENV SANDBOX_API_HOSTNAME=host.docker.internal
 RUN git clone --single-branch -b b0423 https://github.com/Eric-Le-Ge/OpenHands.git /app
 
 # Local dev version of liteLLM.
-RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout 83912d6 && cd /app
+RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout e0cf971 && cd /app
 
 ENV HOME=/app
 
