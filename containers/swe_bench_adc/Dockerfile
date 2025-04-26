@@ -139,7 +139,7 @@ SELECTED_IDS=\${SELECTED_IDS:-\"['sphinx-doc__sphinx-8721']\"}
 SEED=\${SEED:-null}
 printf \"selected_ids = \${SELECTED_IDS}\n\" > /app/evaluation/benchmarks/swe_bench/config.toml
 # Create LLM config.
-printf \"[llm.gemini]\nmodel = '\${MODEL}'\nbase_url = '\${API_BASE_URL}'\napi_key = '\${GEMINI_API_KEY}'\ntemperature = 1.0\ntop_p = 0.95\nmax_output_tokens = 65536\ncaching_prompt = false\nnum_retries = 100\ntimeout = 600\nseed = \${SEED}\n" > /app/config.toml
+printf \"[llm.gemini]\nmodel = '\${MODEL}'\nbase_url = '\${API_BASE_URL}'\napi_key = '\${GEMINI_API_KEY}'\ntemperature = 1.0\ntop_p = 0.95\nmax_output_tokens = 65536\ncaching_prompt = false\nnum_retries = 100\ntimeout = 600\nseed = \${SEED}\n\" > /app/config.toml
 # Run evaluation.
 # See README at https://github.com/All-Hands-AI/OpenHands/tree/main/evaluation/benchmarks/swe_bench
 # [model_config] [git-version] [agent] [eval_limit] [max_iter] [num_workers] [dataset] [dataset_split]
