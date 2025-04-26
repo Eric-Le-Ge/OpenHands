@@ -108,7 +108,7 @@ class LLM(RetryMixin, DebugMixin):
         self.metrics: Metrics = (
             metrics if metrics is not None else Metrics(model_name=config.model)
         )
-        self.cost_metric_supported: bool = not config.model.startswith('gemini/dynamic')
+        self.cost_metric_supported: bool = not config.model.startswith('gemini/dynamic') and ';' not in config.model
         self.config: LLMConfig = copy.deepcopy(config)
 
         self.model_info: ModelInfo | None = None
@@ -169,7 +169,6 @@ class LLM(RetryMixin, DebugMixin):
             top_p=self.config.top_p,
             drop_params=self.config.drop_params,
             seed=self.config.seed,
-            stream=True,
             **kwargs,
         )
 
@@ -255,97 +254,24 @@ class LLM(RetryMixin, DebugMixin):
                 kwargs.pop('extra_body', None)
 
             # Record start time for latency measurement
-            start_time = time.time()
+            start_time = time.time()            # we don't support streaming here, thus we get a ModelResponse
             logger.debug(
                 f'LLM: calling litellm completion with model: {self.config.model}, base_url: {self.config.base_url}, args: {args}, kwargs: {kwargs}'
             )
-            resp = self._completion_unwrapped(*args, **kwargs)
+            resp: ModelResponse = self._completion_unwrapped(*args, **kwargs)
 
-            # Calculate latency
+            # Calculate and record latency
             latency = time.time() - start_time
-
-            chunks = []
-            joined_content = ''
-            role = None
-            function_call = None
-            tool_calls: list[ChatCompletionMessageToolCall] = []
-            provider_specific_fields = None
-            for chunk in resp:
-                chunks.append(chunk)
-
-                if not chunk.choices:
-                    continue
-
-                # We assume  that the first choice the selected one by the LLM.
-                if chunk.choices[0].delta:
-                    delta = chunk.choices[0].delta
-                    if delta.content is not None:
-                        joined_content += delta.content
-                    if delta.role is not None:
-                        role = delta.role
-                    if delta.function_call is not None:
-                        assert function_call is None
-                        function_call = delta.function_call
-                    if delta.tool_calls is not None:
-                        for streaming_tool_call in delta.tool_calls:
-                            # Convert the streaming tool call to a unary one.
-                            tool_calls.append(
-                                ChatCompletionMessageToolCall(
-                                    index=streaming_tool_call.index,
-                                    function=streaming_tool_call.function,
-                                    id=streaming_tool_call.id,
-                                    type=streaming_tool_call.type,
-                                )
-                            )
-                    if delta.provider_specific_fields is not None:
-                        provider_specific_fields = delta.provider_specific_fields
-
-            if not chunks or not any(c.choices for c in chunks):
-                raise LLMNoResponseError(
-                    'Response chunks or chunks.choices are empty. Chunks: '
-                    + str(chunks)
-                )
-
-            logger.info(f'chunks count: {len(chunks)}')
-            logger.info(f'joined_content: {joined_content}')
-            logger.info(f'role: {role}')
-            logger.info(f'tool_calls: {tool_calls}')
-            logger.info(f'function_calls: {function_call}')
-            logger.info(f'provider_specific_fields: {provider_specific_fields}')
-
-            choices = Choices(
-                finish_reason=chunks[-1].choices[-1].finish_reason,
-                # Construct a unary Message from the streaming chunks.
-                message=LiteLLMMessage(
-                    content=joined_content,
-                    role=role,
-                    tool_calls=tool_calls,
-                    function_call=function_call,
-                ),
-            )
-
-            # Construct a ModelResponse from the unary Message.
-            model_response = ModelResponse(
-                id=chunks[-1].id,
-                choices=[choices],
-                created=chunks[-1].created,
-                model=chunks[-1].model,
-                object = "chat.completion",
-                system_fingerprint=chunks[-1].system_fingerprint,
-            )
-
-            logger.info(f'model_response: {model_response}')
-
-            if chunks:
-                response_id = chunks[-1].get('id')
-            else:
-                response_id = 'unknown'
-            # Record latency
+            response_id = resp.get('id', 'unknown')
             self.metrics.add_response_latency(latency, response_id)
+
+            non_fncall_response = copy.deepcopy(resp)
 
             # if we mocked function calling, and we have tools, convert the response back to function calling format
             if mock_function_calling and mock_fncall_tools is not None:
-                non_fncall_response_message = model_response.choices[0].message
+                logger.debug(f'Response choices: {len(resp.choices)}')
+                assert len(resp.choices) >= 1
+                non_fncall_response_message = resp.choices[0].message
                 fn_call_messages_with_response = (
                     convert_non_fncall_messages_to_fncall_messages(
                         messages + [non_fncall_response_message], mock_fncall_tools
@@ -356,9 +282,12 @@ class LLM(RetryMixin, DebugMixin):
                     fn_call_response_message = LiteLLMMessage(
                         **fn_call_response_message
                     )
-                model_response.choices[0].message = fn_call_response_message
+                resp.choices[0].message = fn_call_response_message
 
-            message_back = joined_content
+            message_back: str = resp['choices'][0]['message']['content'] or ''
+            tool_calls: list[ChatCompletionMessageToolCall] = resp['choices'][0][
+                'message'
+            ].get('tool_calls', [])
             if tool_calls:
                 for tool_call in tool_calls:
                     fn_name = tool_call.function.name
@@ -369,7 +298,7 @@ class LLM(RetryMixin, DebugMixin):
             self.log_response(message_back)
 
             # post-process the response first to calculate cost
-            cost = self._post_completion(model_response)
+            cost = self._post_completion(resp)
 
             # log for evals or other scripts that need the raw completion
             if self.config.log_completions:
@@ -383,7 +312,7 @@ class LLM(RetryMixin, DebugMixin):
                 # set up the dict to be logged
                 _d = {
                     'messages': messages,
-                    'response': model_response,
+                    'response': resp,
                     'args': args,
                     'kwargs': {
                         k: v
@@ -397,15 +326,15 @@ class LLM(RetryMixin, DebugMixin):
                 # if non-native function calling, save messages/response separately
                 if mock_function_calling:
                     # Overwrite response as non-fncall to be consistent with messages
-                    _d['response'] = model_response
+                    _d['response'] = non_fncall_response
 
                     # Save fncall_messages/response separately
                     _d['fncall_messages'] = original_fncall_messages
-                    _d['fncall_response'] = model_response
+                    _d['fncall_response'] = resp
                 with open(log_file, 'w') as f:
                     f.write(json.dumps(_d))
 
-            return model_response
+            return resp
 
         self._completion = wrapper
 
