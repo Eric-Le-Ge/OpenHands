@@ -101,7 +101,7 @@ RUN git clone https://github.com/Eric-Le-Ge/OpenHands.git /app
 
 
 # Local dev version of liteLLM.
-RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout e0cf971 && cd /app
+RUN cd /app/openhands && git clone https://github.com/kshivvy/litellm.git && cd litellm && git checkout 9302474 && cd /app
 
 ENV HOME=/app
 
