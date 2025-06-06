@@ -25,7 +25,7 @@ async def test_create_mcp_clients_timeout_with_invalid_url():
 
         # Call create_mcp_clients with the invalid URL
         start_time = asyncio.get_event_loop().time()
-        clients = await create_mcp_clients([invalid_url])
+        clients = await create_mcp_clients([invalid_url], [])
         end_time = asyncio.get_event_loop().time()
 
         # Verify that no clients were successfully connected
@@ -33,9 +33,9 @@ async def test_create_mcp_clients_timeout_with_invalid_url():
 
         # Verify that the operation completed in a reasonable time (less than 5 seconds)
         # This ensures the timeout is working properly
-        assert (
-            end_time - start_time < 5.0
-        ), 'Operation took too long, timeout may not be working'
+        assert end_time - start_time < 5.0, (
+            'Operation took too long, timeout may not be working'
+        )
     finally:
         # Restore the original method
         MCPClient.connect_sse = original_connect_sse
@@ -61,16 +61,16 @@ async def test_create_mcp_clients_with_unreachable_host():
 
         # Call create_mcp_clients with the unreachable URL
         start_time = asyncio.get_event_loop().time()
-        clients = await create_mcp_clients([unreachable_url])
+        clients = await create_mcp_clients([unreachable_url], [])
         end_time = asyncio.get_event_loop().time()
 
         # Verify that no clients were successfully connected
         assert len(clients) == 0
 
         # Verify that the operation completed in a reasonable time (less than 5 seconds)
-        assert (
-            end_time - start_time < 5.0
-        ), 'Operation took too long, timeout may not be working'
+        assert end_time - start_time < 5.0, (
+            'Operation took too long, timeout may not be working'
+        )
     finally:
         # Restore the original method
         MCPClient.connect_sse = original_connect_sse
