@@ -199,6 +199,7 @@ class LLM(RetryMixin, DebugMixin):
             top_p=self.config.top_p,
             drop_params=self.config.drop_params,
             seed=self.config.seed,
+            tool_choice=self.config.tool_choice,
             **kwargs,
         )
 
