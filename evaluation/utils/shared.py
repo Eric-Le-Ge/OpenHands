@@ -175,7 +175,7 @@ def make_metadata(
     shard_id: str | None = None,
 ) -> EvalMetadata:
     model_name = llm_config.model.split('/')[-1]
-    model_path = model_name.replace(':', '_').replace('@', '-')
+    model_name.replace(':', '_').replace('@', '-')
     eval_note = f'_N_{eval_note}' if eval_note else ''
 
     eval_output_path = eval_output_dir
