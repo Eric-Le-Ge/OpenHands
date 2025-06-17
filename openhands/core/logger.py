@@ -375,11 +375,14 @@ openhands_logger.propagate = False
 openhands_logger.debug('Logging initialized')
 
 # Customize log dir
-LOG_DIR = os.getenv('LOG_DIR', os.path.join(
-    # parent dir of openhands/core (i.e., root of the repo)
-    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-    'logs',
-))
+LOG_DIR = os.getenv(
+    'LOG_DIR',
+    os.path.join(
+        # parent dir of openhands/core (i.e., root of the repo)
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        'logs',
+    ),
+)
 
 if LOG_TO_FILE:
     openhands_logger.addHandler(

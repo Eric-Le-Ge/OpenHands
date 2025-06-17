@@ -20,10 +20,9 @@ from litellm import completion_cost as litellm_completion_cost
 from litellm.exceptions import (
     RateLimitError,
 )
-from litellm.types.utils import Choices, CostPerToken, ModelResponse, Usage
-from litellm.utils import create_pretrained_tokenizer
-from litellm.types.utils import Message
 from litellm.llms.base_llm.chat.transformation import BaseLLMException
+from litellm.types.utils import CostPerToken, ModelResponse, Usage
+from litellm.utils import create_pretrained_tokenizer
 
 from openhands.core.exceptions import LLMNoResponseError
 from openhands.core.logger import openhands_logger as logger
@@ -40,7 +39,14 @@ from openhands.llm.retry_mixin import RetryMixin
 __all__ = ['LLM']
 
 # tuple of exceptions to retry on
-LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (RateLimitError,httpx.HTTPStatusError,BaseLLMException,litellm.InternalServerError,LLMNoResponseError,litellm.ServiceUnavailableError)
+LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (
+    RateLimitError,
+    httpx.HTTPStatusError,
+    BaseLLMException,
+    litellm.InternalServerError,
+    LLMNoResponseError,
+    litellm.ServiceUnavailableError,
+)
 
 # cache prompt supporting models
 # remove this when we gemini and deepseek are supported
@@ -125,7 +131,9 @@ class LLM(RetryMixin, DebugMixin):
         self.metrics: Metrics = (
             metrics if metrics is not None else Metrics(model_name=config.model)
         )
-        self.cost_metric_supported: bool = not config.model.startswith('gemini/dynamic') and ';' not in config.model
+        self.cost_metric_supported: bool = (
+            not config.model.startswith('gemini/dynamic') and ';' not in config.model
+        )
         self.config: LLMConfig = copy.deepcopy(config)
 
         self.model_info: ModelInfo | None = None
@@ -307,7 +315,7 @@ class LLM(RetryMixin, DebugMixin):
                     message=r'.*content=.*upload.*',
                     category=DeprecationWarning,
                 )
-                start_time = time.time()
+
                 logger.debug(
                     f'LLM: calling litellm completion with model: {self.config.model}, base_url: {self.config.base_url}, args: {args}, kwargs: {kwargs}'
                 )
