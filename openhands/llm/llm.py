@@ -97,8 +97,9 @@ REASONING_EFFORT_SUPPORTED_MODELS = [
     'o4-mini',
     'o4-mini-2025-04-16',
 ]
+
 if addtional_reasoning_models := os.getenv('ADDITIONAL_REASONING_MODELS', ''):
-    REASONING_EFFORT_SUPPORTED_MODELS.append(addtional_reasoning_models.split(','))
+    REASONING_EFFORT_SUPPORTED_MODELS.extend(addtional_reasoning_models.split(','))
 
 MODELS_WITHOUT_STOP_WORDS = [
     'o1-mini',
