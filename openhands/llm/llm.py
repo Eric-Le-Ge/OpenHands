@@ -96,8 +96,9 @@ REASONING_EFFORT_SUPPORTED_MODELS = [
     'o3-mini',
     'o4-mini',
     'o4-mini-2025-04-16',
-    'gemini/gemini-2.5-pro-preview-06-05',
 ]
+if addtional_reasoning_models := os.getenv('ADDITIONAL_REASONING_MODELS', ''):
+    REASONING_EFFORT_SUPPORTED_MODELS.append(addtional_reasoning_models.split(','))
 
 MODELS_WITHOUT_STOP_WORDS = [
     'o1-mini',
