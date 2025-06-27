@@ -25,6 +25,7 @@ build = "build_vscode.py" # Build VSCode extension during Poetry build
 
 [tool.poetry.dependencies]
 python = "^3.12,<3.14"
+litellm = "^1.60.0, !=1.64.4, !=1.67.*" # avoid 1.64.4 (known bug) & 1.67.* (known bug #10272)
 datasets = "*"
 pandas = "*"
 litellm = { path = "./openhands/litellm", develop = true }
