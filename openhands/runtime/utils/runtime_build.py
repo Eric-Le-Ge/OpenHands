@@ -266,6 +266,7 @@ def prep_build_folder(
             '.*/',
             '__pycache__/',
             '*.pyc',
+            '*.md',
         ),
     )
 
