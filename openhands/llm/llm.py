@@ -21,7 +21,6 @@ from litellm.exceptions import (
     RateLimitError,
     ServiceUnavailableError,
 )
-from litellm.llms.base_llm.chat.transformation import BaseLLMException
 from litellm.types.utils import CostPerToken, ModelResponse, Usage
 from litellm.utils import create_pretrained_tokenizer
 
@@ -41,12 +40,12 @@ __all__ = ['LLM']
 
 # tuple of exceptions to retry on
 LLM_RETRY_EXCEPTIONS: tuple[type[Exception], ...] = (
+    ServiceUnavailableError,
+    litellm.Timeout,
     RateLimitError,
-    httpx.HTTPStatusError,
-    BaseLLMException,
+    httpx.HTTPStatusError,  # custom litellm only
     litellm.InternalServerError,
     LLMNoResponseError,
-    litellm.ServiceUnavailableError,
 )
 # cache prompt supporting models
 # remove this when we gemini and deepseek are supported
